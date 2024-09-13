@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">UserCatalog</string>
+    <string name="ETNameHint">Имя</string>
+    <string name="ETAgeHint">Возраст</string>
+    <string name="BTNSaveText">Сохранить</string>
+    <string name="toolbarTitle">Каталог пользователей</string>
+    <string name="menuMainExitTitle">Exit</string>
+</resources>
