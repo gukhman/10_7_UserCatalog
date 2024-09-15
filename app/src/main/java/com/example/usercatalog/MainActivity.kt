@@ -1,6 +1,9 @@
 package com.example.usercatalog
 
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
@@ -59,6 +62,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        //поменяем цвет текста на черный
+        for (i in 0 until menu!!.size()) {
+            val menuItem = menu.getItem(i)
+            val spanString = SpannableString(menuItem.title.toString())
+            spanString.setSpan(
+                ForegroundColorSpan(Color.BLACK),
+                0,
+                spanString.length,
+                0
+            )
+            menuItem.title = spanString
+        }
         return true
     }
 
