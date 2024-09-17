@@ -6,31 +6,32 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var editTextName: EditText
     private lateinit var editTextAge: EditText
     private lateinit var listViewUsers: ListView
-    private lateinit var users: MutableList<User>
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var buttonSave: Button
 
+    private val userViewModel: UserViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -46,13 +47,17 @@ class MainActivity : AppCompatActivity() {
         listViewUsers = findViewById(R.id.listViewUsers)
         buttonSave = findViewById(R.id.buttonSave)
 
-        users = mutableListOf()
-
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         listViewUsers.adapter = adapter
 
+        // Подписываемся на изменения списка пользователей
+        userViewModel.users.observe(this) { users ->
+            adapter.clear()
+            adapter.addAll(users.map { "${it.name}, ${it.age} лет" })
+        }
+
         buttonSave.setOnClickListener {
-            saveUser()
+            saveUser(it)
         }
 
         listViewUsers.setOnItemClickListener { _, _, position, _ ->
@@ -62,7 +67,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        //поменяем цвет текста на черный
+        // Поменяем цвет текста на черный
         for (i in 0 until (menu?.size() ?: 0)) {
             val menuItem = menu?.getItem(i)
             val spanString = SpannableString(menuItem?.title.toString())
@@ -88,25 +93,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveUser() {
+    private fun saveUser(view: View) {
         val name = editTextName.text.toString()
         val ageText = editTextAge.text.toString()
 
         if (name.isNotBlank() && ageText.isNotBlank()) {
-            val age = ageText.toInt()
-            val user = User(name, age)
-            users.add(user)
-            adapter.add("${user.name}, ${user.age} лет")
-            editTextName.text.clear()
-            editTextAge.text.clear()
+            val age = ageText.toIntOrNull()
+            if (age != null) {
+                val user = User(name, age)
+                val users = userViewModel.users.value ?: mutableListOf()
+                users.add(user)
+                userViewModel.users.value = users
+                editTextName.text.clear()
+                editTextAge.text.clear()
+            } else {
+                Snackbar.make(view, "Введите корректный возраст", Snackbar.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(this, "Заполните оба поля", Toast.LENGTH_SHORT).show()
+            Snackbar.make(view, "Заполните оба поля", Snackbar.LENGTH_SHORT).show()
         }
     }
 
     private fun removeUser(position: Int) {
-        users.removeAt(position)
-        adapter.remove(adapter.getItem(position))
-        adapter.notifyDataSetChanged()
+        val users = userViewModel.users.value ?: return
+        if (position >= 0 && position < users.size) {
+            users.removeAt(position)
+            userViewModel.users.value = users
+        }
     }
 }
