@@ -19,6 +19,7 @@ import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
+    //объявляем
     private lateinit var editTextName: EditText
     private lateinit var editTextAge: EditText
     private lateinit var listViewUsers: ListView
@@ -38,6 +39,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        //инициализируем
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Каталог пользователей"
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         listViewUsers = findViewById(R.id.listViewUsers)
         buttonSave = findViewById(R.id.buttonSave)
 
+        //Используем адаптер для заолнения listView
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         listViewUsers.adapter = adapter
 
@@ -56,15 +59,20 @@ class MainActivity : AppCompatActivity() {
             adapter.addAll(users.map { "${it.name}, ${it.age} лет" })
         }
 
+        //вешаем на кнопку сохранить функцию saveUser
         buttonSave.setOnClickListener {
             saveUser(it)
         }
 
+        //для удаления User используем AlertDialog
         listViewUsers.setOnItemClickListener { _, _, position, _ ->
-            removeUser(position)
+            MyDialog(this).showConfirmationDialog {
+                removeUser(position)
+            }
         }
     }
 
+    //Создаем меню
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         // Поменяем цвет текста на черный
@@ -93,6 +101,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //сохранение пользователя, используем viewModel для сохранения состояния при пересоздании Activity
     private fun saveUser(view: View) {
         val name = editTextName.text.toString()
         val ageText = editTextAge.text.toString()
@@ -114,6 +123,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //Удаление пользователя
     private fun removeUser(position: Int) {
         val users = userViewModel.users.value ?: return
         if (position >= 0 && position < users.size) {
